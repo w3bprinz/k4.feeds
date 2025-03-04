@@ -1,20 +1,24 @@
-const Discord = require("discord.js");
-const Parser = require("rss-parser");
-const cron = require("node-cron");
-const dotenv = require("dotenv");
-const fs = require("fs");
+import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
+import Parser from "rss-parser";
+import nodeCron from "node-cron";
+import { config } from "dotenv";
+import { readFileSync } from "fs";
 
-dotenv.config();
+config();
 
-const client = new Discord.Client({
-  intents: [Discord.Intents.FLAGS.Guilds],
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
 });
 
+const parser = new Parser();
+const botConfig = JSON.parse(readFileSync("config.json", "utf-8"));
+
+// Speichert die zuletzt gesendeten Artikel
 const lastPostedItems = new Map();
 
 async function checkFeed(url, channel) {
   try {
-    const feedData = await Parser.parseURL(url);
+    const feedData = await parser.parseURL(url);
 
     if (!lastPostedItems.has(url)) {
       lastPostedItems.set(url, feedData.items[0].link);
@@ -25,7 +29,7 @@ async function checkFeed(url, channel) {
     const newItems = feedData.items.filter((item) => item.link !== lastPostedLink);
 
     for (const item of newItems.reverse()) {
-      const embed = new Discord.EmbedBuilder()
+      const embed = new EmbedBuilder()
         .setTitle(item.title)
         .setURL(item.link)
         .setDescription(item.contentSnippet || "Keine Beschreibung verfügbar")
@@ -58,21 +62,11 @@ async function checkChannelFeeds(channelConfig) {
 client.once("ready", () => {
   console.log(`Bot ist eingeloggt als ${client.user.tag}`);
 
-  // Feeds für jeden Channel überprüfen
-  config.channels.forEach((channelConfig) => {
-    cron.schedule(channelConfig.interval, () => {
+  botConfig.channels.forEach((channelConfig) => {
+    nodeCron.schedule(channelConfig.interval, () => {
       checkChannelFeeds(channelConfig);
     });
   });
-});
-
-client.on("messageCreate", async (message) => {
-  if (message.content === "!feeds") {
-    const channels = require("./config.json").channels;
-    for (const channel of channels) {
-      await checkChannelFeeds(channel);
-    }
-  }
 });
 
 client.login(process.env.DISCORD_TOKEN);

@@ -1,14 +1,14 @@
 {
-  "dependencies": {
-    "discord.js": "^14.18.0",
-    "dotenv": "^16.4.7",
-    "node-cron": "^3.0.3",
-    "rss-parser": "^3.13.0"
-  },
   "name": "discord-rss-bot",
   "version": "1.0.0",
-  "type": "module",
   "main": "index.js",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "rss-parser": "^3.13.0",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.4.5"
+  },
+  "type": "module",
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
