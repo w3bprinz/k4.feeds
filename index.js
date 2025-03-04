@@ -196,13 +196,29 @@ client.once("ready", async () => {
 
   // Reguläre Intervall-Überprüfung einrichten
   botConfig.channels.forEach((channelConfig) => {
-    nodeCron.schedule(channelConfig.interval, () => {
-      logWithTimestamp(`Starte geplante Feed-Überprüfung für ${channelConfig.name}...`);
-      checkChannelFeeds(channelConfig).then(() => {
-        logWithTimestamp(`Feed-Überprüfung für ${channelConfig.name} abgeschlossen`);
-      });
-    });
+    // Log beim Einrichten des Jobs
+    logWithTimestamp(`Richte Cron-Job für ${channelConfig.name} ein mit Intervall: ${channelConfig.interval}`);
+
+    nodeCron.schedule(
+      channelConfig.interval,
+      async () => {
+        try {
+          logWithTimestamp(`Starte geplante Feed-Überprüfung für ${channelConfig.name}...`);
+          await checkChannelFeeds(channelConfig);
+          logWithTimestamp(`Feed-Überprüfung für ${channelConfig.name} abgeschlossen`);
+        } catch (error) {
+          logWithTimestamp(`Fehler im Cron-Job für ${channelConfig.name}: ${error}`);
+        }
+      },
+      {
+        scheduled: true,
+        timezone: "Europe/Berlin",
+      }
+    );
   });
+
+  // Log zur Bestätigung
+  logWithTimestamp("Alle Cron-Jobs wurden eingerichtet");
 });
 
 client.login(process.env.DISCORD_TOKEN);
