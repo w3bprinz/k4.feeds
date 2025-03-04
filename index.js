@@ -3,6 +3,7 @@ import Parser from "rss-parser";
 import nodeCron from "node-cron";
 import { config } from "dotenv";
 import { readFileSync } from "fs";
+import { ActivityType } from "discord.js";
 
 config();
 
@@ -15,6 +16,24 @@ const botConfig = JSON.parse(readFileSync("config.json", "utf-8"));
 
 // Speichert die zuletzt gesendeten Artikel
 const lastPostedItems = new Map();
+
+const activities = [
+  { name: "RSS Feeds", type: ActivityType.Watching },
+  { name: "neue Artikel", type: ActivityType.Listening },
+  { name: `${botConfig.channels.length} Kanäle`, type: ActivityType.Watching },
+  { name: "nach Updates", type: ActivityType.Searching },
+];
+
+let currentActivity = 0;
+
+function updateStatus() {
+  client.user.setActivity(activities[currentActivity].name, {
+    type: activities[currentActivity].type,
+  });
+
+  // Zum nächsten Status rotieren
+  currentActivity = (currentActivity + 1) % activities.length;
+}
 
 async function checkFeed(url, channel) {
   try {
@@ -59,9 +78,23 @@ async function checkChannelFeeds(channelConfig) {
   }
 }
 
-client.once("ready", () => {
+client.once("ready", async () => {
   console.log(`Bot ist eingeloggt als ${client.user.tag}`);
 
+  // Initial Status setzen
+  updateStatus();
+
+  // Status alle 30 Sekunden ändern
+  setInterval(updateStatus, 30000);
+
+  // Sofortige erste Überprüfung aller Feeds
+  console.log("Führe initiale Feed-Überprüfung durch...");
+  for (const channelConfig of botConfig.channels) {
+    await checkChannelFeeds(channelConfig);
+  }
+  console.log("Initiale Feed-Überprüfung abgeschlossen");
+
+  // Reguläre Intervall-Überprüfung einrichten
   botConfig.channels.forEach((channelConfig) => {
     nodeCron.schedule(channelConfig.interval, () => {
       checkChannelFeeds(channelConfig);
