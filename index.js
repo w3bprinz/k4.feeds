@@ -169,7 +169,7 @@ async function checkChannelFeeds(channelConfig) {
       await checkFeed(feedUrl, channel);
     }
   } catch (error) {
-    console.error(`Fehler beim Überprüfen der Feeds für Channel ${channelConfig.name}:`, error);
+    logWithTimestamp(`Fehler beim Überprüfen der Feeds für Channel ${channelConfig.name}:`, error);
   }
 }
 
@@ -197,7 +197,10 @@ client.once("ready", async () => {
   // Reguläre Intervall-Überprüfung einrichten
   botConfig.channels.forEach((channelConfig) => {
     nodeCron.schedule(channelConfig.interval, () => {
-      checkChannelFeeds(channelConfig);
+      logWithTimestamp(`Starte geplante Feed-Überprüfung für ${channelConfig.name}...`);
+      checkChannelFeeds(channelConfig).then(() => {
+        logWithTimestamp(`Feed-Überprüfung für ${channelConfig.name} abgeschlossen`);
+      });
     });
   });
 });
