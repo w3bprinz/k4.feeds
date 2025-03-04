@@ -1,9 +1,10 @@
-import Discord from "discord.js";
-import Parser from "rss-parser";
-import cron from "node-cron";
-import { config } from "dotenv";
+const Discord = require("discord.js");
+const Parser = require("rss-parser");
+const cron = require("node-cron");
+const dotenv = require("dotenv");
+const fs = require("fs");
 
-config();
+dotenv.config();
 
 const client = new Discord.Client({
   intents: [Discord.Intents.FLAGS.Guilds],
