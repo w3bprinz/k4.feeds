@@ -5,6 +5,8 @@ import { config } from "dotenv";
 import { readFileSync } from "fs";
 import { ActivityType } from "discord.js";
 import fs from "fs";
+import fetch from "node-fetch";
+import cheerio from "cheerio";
 
 config();
 
@@ -62,6 +64,30 @@ function updateStatus() {
   currentActivity = (currentActivity + 1) % activities.length;
 }
 
+async function getArticleImage(url) {
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Suche nach Bildern in verschiedenen Meta-Tags
+    let imageUrl = $('meta[property="og:image"]').attr("content") || $('meta[name="twitter:image"]').attr("content");
+
+    // Fallback: Suche nach dem ersten Bild im Artikel
+    if (!imageUrl) {
+      imageUrl =
+        $("article img").first().attr("src") ||
+        $(".post-content img").first().attr("src") ||
+        $(".entry-content img").first().attr("src");
+    }
+
+    return imageUrl;
+  } catch (error) {
+    console.error("Fehler beim Holen des Artikelbildes:", error);
+    return null;
+  }
+}
+
 async function checkFeed(url, channel) {
   try {
     const feedData = await parser.parseURL(url);
@@ -85,21 +111,8 @@ async function checkFeed(url, channel) {
     });
 
     for (const item of newItems.reverse()) {
-      // Suche nach einem Bild im Feed-Eintrag
-      let imageUrl = null;
-
-      // Prüfe verschiedene mögliche Bildquellen
-      if (item.enclosure && item.enclosure.url && item.enclosure.type?.startsWith("image/")) {
-        imageUrl = item.enclosure.url;
-      } else if (item["media:content"] && item["media:content"].url) {
-        imageUrl = item["media:content"].url;
-      } else if (item.content) {
-        // Suche nach dem ersten Bild im HTML-Content
-        const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-        if (imgMatch) {
-          imageUrl = imgMatch[1];
-        }
-      }
+      // Hole das Bild von der Artikel-Seite
+      const imageUrl = await getArticleImage(item.link);
 
       const embed = new EmbedBuilder()
         .setTitle(item.title)
@@ -109,14 +122,11 @@ async function checkFeed(url, channel) {
         .setTimestamp(new Date(item.pubDate))
         .setFooter({ text: `Quelle: ${new URL(url).hostname}` });
 
-      // Füge das Bild hinzu, wenn eines gefunden wurde
       if (imageUrl) {
         embed.setImage(imageUrl);
       }
 
       await channel.send({ embeds: [embed] });
-
-      // Neues Logging
       console.log(`Neuer Post: "${item.title}" wurde in #${channel.name} (${channel.guild.name}) gesendet`);
     }
 

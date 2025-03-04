@@ -13,7 +13,7 @@
       "feeds": ["https://www.spielekauf.de/rss/?categories=xbox-one,xbox-series,xbox"]
     },
     {
-      "channelId": "722133961782067281",
+      "channelId": "722133548378882139",
       "interval": "*/30 * * * *",
       "name": "Deals - GENERAL",
       "feeds": ["https://www.gamestar.de/rss/deals.rss"]
@@ -25,7 +25,7 @@
       "feeds": ["https://www.play3.de/feed/", "https://playfront.de/feed/"]
     },
     {
-      "channelId": "722133548378882139",
+      "channelId": "723899696413802496",
       "interval": "*/30 * * * *",
       "name": "NEWS - XBOX",
       "feeds": ["https://www.xboxdynasty.de/news/feed/"]
