@@ -183,18 +183,61 @@ async function checkChannelFeeds(channelConfig) {
   }
 }
 
-// Globales Objekt für aktive Cron-Jobs
-const activeJobs = new Map();
+// Job-Manager für zentrale Verwaltung
+class FeedJobManager {
+  constructor() {
+    this.jobs = new Map();
+    this.isRunning = false;
+  }
 
-// Funktion zum Stoppen aller Jobs
-function stopAllJobs() {
-  logWithTimestamp("Stoppe alle aktiven Cron-Jobs...");
-  activeJobs.forEach((job, name) => {
-    job.stop();
-    logWithTimestamp(`Job gestoppt: ${name}`);
-  });
-  activeJobs.clear();
+  stopAll() {
+    logWithTimestamp("Stoppe alle aktiven Cron-Jobs...");
+    this.jobs.forEach((job, name) => {
+      job.stop();
+      logWithTimestamp(`Job gestoppt: ${name}`);
+    });
+    this.jobs.clear();
+    this.isRunning = false;
+  }
+
+  async scheduleJobs(configs) {
+    if (this.isRunning) {
+      logWithTimestamp("Jobs laufen bereits, stoppe alte Jobs...");
+      this.stopAll();
+    }
+
+    this.isRunning = true;
+    configs.forEach((config) => {
+      logWithTimestamp(`Richte Cron-Job für ${config.name} ein mit Intervall: ${config.interval}`);
+
+      const job = nodeCron.schedule(
+        config.interval,
+        async () => {
+          if (!this.isRunning || !this.jobs.has(config.name)) return;
+
+          try {
+            logWithTimestamp(`Starte geplante Feed-Überprüfung für ${config.name}...`);
+            await checkChannelFeeds(config);
+            logWithTimestamp(`Feed-Überprüfung für ${config.name} abgeschlossen`);
+          } catch (error) {
+            logError(`Fehler im Cron-Job für ${config.name}: ${error}`);
+          }
+        },
+        {
+          scheduled: true,
+          timezone: "Europe/Berlin",
+        }
+      );
+
+      this.jobs.set(config.name, job);
+    });
+
+    logWithTimestamp(`Alle Cron-Jobs wurden eingerichtet (Aktive Jobs: ${this.jobs.size})`);
+  }
 }
+
+// Erstelle eine einzelne Instanz des Job-Managers
+const jobManager = new FeedJobManager();
 
 client.once("ready", async () => {
   logWithTimestamp(`Bot ist eingeloggt als ${client.user.tag}`);
@@ -212,57 +255,18 @@ client.once("ready", async () => {
   }
   logWithTimestamp("Initiale Feed-Überprüfung abgeschlossen");
 
-  // Stoppe alle existierenden Jobs
-  stopAllJobs();
-
-  // Reguläre Intervall-Überprüfung einrichten
-  botConfig.channels.forEach((channelConfig) => {
-    // Prüfe ob bereits ein Job für diesen Namen existiert
-    if (activeJobs.has(channelConfig.name)) {
-      logWithTimestamp(`Job existiert bereits für ${channelConfig.name}, wird übersprungen`);
-      return;
-    }
-
-    logWithTimestamp(`Richte Cron-Job für ${channelConfig.name} ein mit Intervall: ${channelConfig.interval}`);
-
-    const job = nodeCron.schedule(
-      channelConfig.interval,
-      async () => {
-        // Prüfe ob der Job noch aktiv sein sollte
-        if (!activeJobs.has(channelConfig.name)) {
-          logWithTimestamp(`Überspringe inaktiven Job für ${channelConfig.name}`);
-          return;
-        }
-
-        try {
-          logWithTimestamp(`Starte geplante Feed-Überprüfung für ${channelConfig.name}...`);
-          await checkChannelFeeds(channelConfig);
-          logWithTimestamp(`Feed-Überprüfung für ${channelConfig.name} abgeschlossen`);
-        } catch (error) {
-          logError(`Fehler im Cron-Job für ${channelConfig.name}: ${error}`);
-        }
-      },
-      {
-        scheduled: true,
-        timezone: "Europe/Berlin",
-        recoverMissedExecutions: true,
-      }
-    );
-
-    activeJobs.set(channelConfig.name, job);
-  });
-
-  logWithTimestamp(`Alle Cron-Jobs wurden eingerichtet (Aktive Jobs: ${activeJobs.size})`);
+  // Starte die Jobs mit dem Manager
+  await jobManager.scheduleJobs(botConfig.channels);
 });
 
 // Cleanup bei Programmende
 process.on("SIGTERM", () => {
-  stopAllJobs();
+  jobManager.stopAll();
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
-  stopAllJobs();
+  jobManager.stopAll();
   process.exit(0);
 });
 
