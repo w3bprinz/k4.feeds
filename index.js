@@ -201,7 +201,6 @@ client.once("ready", async () => {
 
   // Reguläre Intervall-Überprüfung einrichten
   botConfig.channels.forEach((channelConfig) => {
-    // Log beim Einrichten des Jobs
     logWithTimestamp(`Richte Cron-Job für ${channelConfig.name} ein mit Intervall: ${channelConfig.interval}`);
 
     nodeCron.schedule(
@@ -218,11 +217,11 @@ client.once("ready", async () => {
       {
         scheduled: true,
         timezone: "Europe/Berlin",
+        recoverMissedExecutions: true,
       }
     );
   });
 
-  // Log zur Bestätigung
   logWithTimestamp("Alle Cron-Jobs wurden eingerichtet");
 });
 
