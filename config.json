@@ -4,20 +4,13 @@
       "channelId": "722467994264928286",
       "interval": "*/30 * * * *",
       "name": "Deals - PLAYSTATION",
-      "feeds": [
-        "https://www.spielekauf.de/rss/?categories=ps4,ps5",
-        "https://www.gamedeals.de/rss/playstation",
-        "https://www.psdeals.net/feed"
-      ]
+      "feeds": ["https://www.spielekauf.de/rss/?categories=ps4,ps5"]
     },
     {
       "channelId": "723899748708384778",
       "interval": "*/30 * * * *",
       "name": "Deals - XBOX",
-      "feeds": [
-        "https://www.spielekauf.de/rss/?categories=xbox-one,xbox-series,xbox",
-        "https://www.gamedeals.de/rss/xbox"
-      ]
+      "feeds": ["https://www.spielekauf.de/rss/?categories=xbox-one,xbox-series,xbox"]
     },
     {
       "channelId": "722133961782067281",
