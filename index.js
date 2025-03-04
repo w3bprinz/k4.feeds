@@ -186,6 +186,16 @@ async function checkChannelFeeds(channelConfig) {
 // Globales Objekt für aktive Cron-Jobs
 const activeJobs = new Map();
 
+// Funktion zum Stoppen aller Jobs
+function stopAllJobs() {
+  logWithTimestamp("Stoppe alle aktiven Cron-Jobs...");
+  activeJobs.forEach((job, name) => {
+    job.stop();
+    logWithTimestamp(`Job gestoppt: ${name}`);
+  });
+  activeJobs.clear();
+}
+
 client.once("ready", async () => {
   logWithTimestamp(`Bot ist eingeloggt als ${client.user.tag}`);
 
@@ -202,17 +212,28 @@ client.once("ready", async () => {
   }
   logWithTimestamp("Initiale Feed-Überprüfung abgeschlossen");
 
-  // Bestehende Jobs stoppen
-  activeJobs.forEach((job) => job.stop());
-  activeJobs.clear();
+  // Stoppe alle existierenden Jobs
+  stopAllJobs();
 
   // Reguläre Intervall-Überprüfung einrichten
   botConfig.channels.forEach((channelConfig) => {
+    // Prüfe ob bereits ein Job für diesen Namen existiert
+    if (activeJobs.has(channelConfig.name)) {
+      logWithTimestamp(`Job existiert bereits für ${channelConfig.name}, wird übersprungen`);
+      return;
+    }
+
     logWithTimestamp(`Richte Cron-Job für ${channelConfig.name} ein mit Intervall: ${channelConfig.interval}`);
 
     const job = nodeCron.schedule(
       channelConfig.interval,
       async () => {
+        // Prüfe ob der Job noch aktiv sein sollte
+        if (!activeJobs.has(channelConfig.name)) {
+          logWithTimestamp(`Überspringe inaktiven Job für ${channelConfig.name}`);
+          return;
+        }
+
         try {
           logWithTimestamp(`Starte geplante Feed-Überprüfung für ${channelConfig.name}...`);
           await checkChannelFeeds(channelConfig);
@@ -231,7 +252,18 @@ client.once("ready", async () => {
     activeJobs.set(channelConfig.name, job);
   });
 
-  logWithTimestamp("Alle Cron-Jobs wurden eingerichtet");
+  logWithTimestamp(`Alle Cron-Jobs wurden eingerichtet (Aktive Jobs: ${activeJobs.size})`);
+});
+
+// Cleanup bei Programmende
+process.on("SIGTERM", () => {
+  stopAllJobs();
+  process.exit(0);
+});
+
+process.on("SIGINT", () => {
+  stopAllJobs();
+  process.exit(0);
 });
 
 client.login(process.env.DISCORD_TOKEN);
