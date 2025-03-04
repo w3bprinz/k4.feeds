@@ -33,7 +33,7 @@ try {
     lastPostedItems = new Map(Object.entries(savedData));
   }
 } catch (error) {
-  console.error("Fehler beim Laden der gespeicherten Daten:", error);
+  logError(`Fehler beim Laden der gespeicherten Daten: ${error}`);
 }
 
 // Funktion zum Speichern der Daten
@@ -42,7 +42,7 @@ function saveLastPostedItems() {
     const dataToSave = Object.fromEntries(lastPostedItems);
     fs.writeFileSync(STORAGE_FILE, JSON.stringify(dataToSave, null, 2));
   } catch (error) {
-    console.error("Fehler beim Speichern der Daten:", error);
+    logError(`Fehler beim Speichern der Daten: ${error}`);
   }
 }
 
@@ -62,6 +62,16 @@ function updateStatus() {
 
   // Zum nächsten Status rotieren
   currentActivity = (currentActivity + 1) % activities.length;
+}
+
+// Logging-Funktionen
+function logWithTimestamp(message, type = "INFO") {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [${type}] ${message}`);
+}
+
+function logError(message) {
+  logWithTimestamp(message, "ERROR");
 }
 
 async function getArticleImage(url) {
@@ -98,7 +108,7 @@ async function getArticleImage(url) {
 
     return null;
   } catch (error) {
-    console.error("Fehler beim Holen des Artikelbildes:", error);
+    logError(`Fehler beim Holen des Artikelbildes: ${error}`);
     return null;
   }
 }
@@ -158,7 +168,7 @@ async function checkFeed(url, channel) {
       saveLastPostedItems();
     }
   } catch (error) {
-    logWithTimestamp(`Fehler beim Überprüfen des Feeds ${url}: ${error}`);
+    logError(`Fehler beim Überprüfen des Feeds ${url}: ${error}`);
   }
 }
 
@@ -169,13 +179,8 @@ async function checkChannelFeeds(channelConfig) {
       await checkFeed(feedUrl, channel);
     }
   } catch (error) {
-    logWithTimestamp(`Fehler beim Überprüfen der Feeds für Channel ${channelConfig.name}:`, error);
+    logError(`Fehler beim Überprüfen der Feeds für Channel ${channelConfig.name}:`, error);
   }
-}
-
-function logWithTimestamp(message) {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${message}`);
 }
 
 client.once("ready", async () => {
@@ -207,7 +212,7 @@ client.once("ready", async () => {
           await checkChannelFeeds(channelConfig);
           logWithTimestamp(`Feed-Überprüfung für ${channelConfig.name} abgeschlossen`);
         } catch (error) {
-          logWithTimestamp(`Fehler im Cron-Job für ${channelConfig.name}: ${error}`);
+          logError(`Fehler im Cron-Job für ${channelConfig.name}: ${error}`);
         }
       },
       {
