@@ -70,22 +70,42 @@ async function getArticleImage(url) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // Suche nach Bildern in verschiedenen Meta-Tags
-    let imageUrl = $('meta[property="og:image"]').attr("content") || $('meta[name="twitter:image"]').attr("content");
+    // Prüfe Meta-Tags
+    let imageUrl = $('meta[property="og:image"]').attr("content");
+    if (isValidImageUrl(imageUrl)) return imageUrl;
 
-    // Fallback: Suche nach dem ersten Bild im Artikel
-    if (!imageUrl) {
-      imageUrl =
-        $("article img").first().attr("src") ||
-        $(".post-content img").first().attr("src") ||
-        $(".entry-content img").first().attr("src");
-    }
+    imageUrl = $('meta[property="og:image:secure_url"]').attr("content");
+    if (isValidImageUrl(imageUrl)) return imageUrl;
 
-    return imageUrl;
+    imageUrl = $('meta[name="twitter:image"]').attr("content");
+    if (isValidImageUrl(imageUrl)) return imageUrl;
+
+    // Prüfe Link-Rel
+    imageUrl = $('link[rel="image_src"]').attr("href");
+    if (isValidImageUrl(imageUrl)) return imageUrl;
+
+    // Prüfe data-src Attribute
+    imageUrl = $("img[data-src]").first().attr("data-src");
+    if (isValidImageUrl(imageUrl)) return imageUrl;
+
+    // Prüfe Element mit ID
+    imageUrl = $("#post-image").attr("src");
+    if (isValidImageUrl(imageUrl)) return imageUrl;
+
+    // Fallback: Erstes Bild
+    imageUrl = $("img").first().attr("src");
+    if (isValidImageUrl(imageUrl)) return imageUrl;
+
+    return null;
   } catch (error) {
     console.error("Fehler beim Holen des Artikelbildes:", error);
     return null;
   }
+}
+
+function isValidImageUrl(url) {
+  if (!url) return false;
+  return url.match(/\.(jpg|jpeg|png|webp|gif)/i) !== null;
 }
 
 async function checkFeed(url, channel) {
@@ -127,7 +147,7 @@ async function checkFeed(url, channel) {
       }
 
       await channel.send({ embeds: [embed] });
-      console.log(`Neuer Post: "${item.title}" wurde in #${channel.name} (${channel.guild.name}) gesendet`);
+      logWithTimestamp(`Neuer Post: "${item.title}" wurde in #${channel.name} (${channel.guild.name}) gesendet`);
     }
 
     if (newItems.length > 0) {
@@ -138,7 +158,7 @@ async function checkFeed(url, channel) {
       saveLastPostedItems();
     }
   } catch (error) {
-    console.error(`Fehler beim Überprüfen des Feeds ${url}:`, error);
+    logWithTimestamp(`Fehler beim Überprüfen des Feeds ${url}: ${error}`);
   }
 }
 
@@ -153,8 +173,13 @@ async function checkChannelFeeds(channelConfig) {
   }
 }
 
+function logWithTimestamp(message) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${message}`);
+}
+
 client.once("ready", async () => {
-  console.log(`Bot ist eingeloggt als ${client.user.tag}`);
+  logWithTimestamp(`Bot ist eingeloggt als ${client.user.tag}`);
 
   // Initial Status setzen
   updateStatus();
@@ -163,11 +188,11 @@ client.once("ready", async () => {
   setInterval(updateStatus, 30000);
 
   // Sofortige erste Überprüfung aller Feeds
-  console.log("Führe initiale Feed-Überprüfung durch...");
+  logWithTimestamp("Führe initiale Feed-Überprüfung durch...");
   for (const channelConfig of botConfig.channels) {
     await checkChannelFeeds(channelConfig);
   }
-  console.log("Initiale Feed-Überprüfung abgeschlossen");
+  logWithTimestamp("Initiale Feed-Überprüfung abgeschlossen");
 
   // Reguläre Intervall-Überprüfung einrichten
   botConfig.channels.forEach((channelConfig) => {
