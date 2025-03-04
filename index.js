@@ -183,6 +183,9 @@ async function checkChannelFeeds(channelConfig) {
   }
 }
 
+// Globales Objekt für aktive Cron-Jobs
+const activeJobs = new Map();
+
 client.once("ready", async () => {
   logWithTimestamp(`Bot ist eingeloggt als ${client.user.tag}`);
 
@@ -199,11 +202,15 @@ client.once("ready", async () => {
   }
   logWithTimestamp("Initiale Feed-Überprüfung abgeschlossen");
 
+  // Bestehende Jobs stoppen
+  activeJobs.forEach((job) => job.stop());
+  activeJobs.clear();
+
   // Reguläre Intervall-Überprüfung einrichten
   botConfig.channels.forEach((channelConfig) => {
     logWithTimestamp(`Richte Cron-Job für ${channelConfig.name} ein mit Intervall: ${channelConfig.interval}`);
 
-    nodeCron.schedule(
+    const job = nodeCron.schedule(
       channelConfig.interval,
       async () => {
         try {
@@ -220,6 +227,8 @@ client.once("ready", async () => {
         recoverMissedExecutions: true,
       }
     );
+
+    activeJobs.set(channelConfig.name, job);
   });
 
   logWithTimestamp("Alle Cron-Jobs wurden eingerichtet");
