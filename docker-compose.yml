@@ -1,9 +1,12 @@
 version: "3"
 services:
   discord-rss-bot:
-    build: .
+    image: ghcr.io/w3bprinz/k4.feeds:main
     container_name: discord-rss-bot
-    restart: unless-stopped
+    environment:
+      - DISCORD_TOKEN=dein_discord_bot_token
     volumes:
-      - ./config.json:/app/config.json
-      - ./.env:/app/.env
+      - /mnt/user/appdata/discord-rss-bot/config.json:/app/config.json
+      - /mnt/user/appdata/discord-rss-bot/.env:/app/.env
+      - /mnt/user/appdata/discord-rss-bot/data:/app/data
+    restart: unless-stopped
