@@ -5,7 +5,6 @@ import { config } from "dotenv";
 import { readFileSync } from "fs";
 import { ActivityType } from "discord.js";
 import fs from "fs";
-import path from "path";
 
 config();
 
@@ -66,7 +65,6 @@ function updateStatus() {
 async function checkFeed(url, channel) {
   try {
     const feedData = await parser.parseURL(url);
-    const currentDate = new Date();
 
     if (!lastPostedItems.has(url)) {
       const latestItem = feedData.items[0];
@@ -117,6 +115,9 @@ async function checkFeed(url, channel) {
       }
 
       await channel.send({ embeds: [embed] });
+
+      // Neues Logging
+      console.log(`Neuer Post: "${item.title}" wurde in #${channel.name} (${channel.guild.name}) gesendet`);
     }
 
     if (newItems.length > 0) {
