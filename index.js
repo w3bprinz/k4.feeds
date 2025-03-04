@@ -6,7 +6,7 @@ import { readFileSync } from "fs";
 import { ActivityType } from "discord.js";
 import fs from "fs";
 import fetch from "node-fetch";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 
 config();
 
