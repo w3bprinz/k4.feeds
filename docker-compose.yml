@@ -1,0 +1,9 @@
+version: "3"
+services:
+  discord-rss-bot:
+    build: .
+    container_name: discord-rss-bot
+    restart: unless-stopped
+    volumes:
+      - ./config.json:/app/config.json
+      - ./.env:/app/.env

@@ -1,0 +1,47 @@
+{
+  "channels": [
+    {
+      "channelId": "722467994264928286",
+      "interval": "*/30 * * * *",
+      "name": "Deals - PLAYSTATION",
+      "feeds": [
+        "https://www.spielekauf.de/rss/?categories=ps4,ps5",
+        "https://www.gamedeals.de/rss/playstation",
+        "https://www.psdeals.net/feed"
+      ]
+    },
+    {
+      "channelId": "723899748708384778",
+      "interval": "*/30 * * * *",
+      "name": "Deals - XBOX",
+      "feeds": [
+        "https://www.spielekauf.de/rss/?categories=xbox-one,xbox-series,xbox",
+        "https://www.gamedeals.de/rss/xbox"
+      ]
+    },
+    {
+      "channelId": "722133961782067281",
+      "interval": "*/30 * * * *",
+      "name": "Deals - GENERAL",
+      "feeds": ["https://www.gamestar.de/rss/deals.rss", "https://www.mydealz.de/feed/gaming"]
+    },
+    {
+      "channelId": "723899696413802496",
+      "interval": "*/30 * * * *",
+      "name": "NEWS - PLAYSTATION",
+      "feeds": ["https://www.play3.de/feed/", "https://playfront.de/feed/"]
+    },
+    {
+      "channelId": "722133548378882139",
+      "interval": "*/30 * * * *",
+      "name": "NEWS - XBOX",
+      "feeds": ["https://www.xboxdynasty.de/news/feed/"]
+    },
+    {
+      "channelId": "1345727469910757438",
+      "interval": "*/30 * * * *",
+      "name": "NEWS - GENERAL",
+      "feeds": ["https://www.gamestar.de/rss/gaming.rss"]
+    }
+  ]
+}
