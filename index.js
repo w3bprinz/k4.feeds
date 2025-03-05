@@ -141,8 +141,15 @@ async function checkFeed(url, channel) {
     });
 
     for (const item of newItems.reverse()) {
-      // Hole das Bild von der Artikel-Seite
-      const imageUrl = await getArticleImage(item.link);
+      let imageUrl = null;
+
+      // Prüfe auf YouTube-Feed Thumbnail
+      if (item["media:thumbnail"] && item["media:thumbnail"]["$"]) {
+        imageUrl = item["media:thumbnail"]["$"].url;
+      } else {
+        // Fallback auf normale Bildsuche
+        imageUrl = await getArticleImage(item.link);
+      }
 
       const embed = new EmbedBuilder()
         .setTitle(item.title)
