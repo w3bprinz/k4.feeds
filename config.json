@@ -13,13 +13,13 @@
       "feeds": ["https://www.spielekauf.de/rss/?categories=xbox-one,xbox-series,xbox"]
     },
     {
-      "channelId": "722133548378882139",
+      "channelId": "722133961782067281",
       "interval": "*/30 * * * *",
       "name": "Deals - GENERAL",
       "feeds": ["https://www.gamestar.de/rss/deals.rss"]
     },
     {
-      "channelId": "723899696413802496",
+      "channelId": "722133548378882139",
       "interval": "*/30 * * * *",
       "name": "NEWS - PLAYSTATION",
       "feeds": ["https://www.play3.de/feed/", "https://playfront.de/feed/"]
@@ -35,6 +35,18 @@
       "interval": "*/30 * * * *",
       "name": "NEWS - GENERAL",
       "feeds": ["https://www.gamestar.de/rss/gaming.rss"]
+    },
+    {
+      "channelId": "1345887374596636702",
+      "interval": "*/30 * * * *",
+      "name": "420 - YOUTUBE",
+      "feeds": [
+        "https://www.youtube.com/feeds/videos.xml?channel_id=UCU_sZ-_O73K7YfL0MLz2-1g",
+        "https://www.youtube.com/feeds/videos.xml?channel_id=UC_xlvAgAO-Inurgm6A3kJVQ",
+        "https://www.youtube.com/feeds/videos.xml?channel_id=UCd75v2aGwt1zg5VGSrJgUIA",
+        "https://www.youtube.com/feeds/videos.xml?channel_id=UCwzSy-kAedjwRGHEmItSVqQ",
+        "https://www.youtube.com/feeds/videos.xml?channel_id=UCtU2-cpxx18iQ4BvracrxDQ"
+      ]
     }
   ]
 }
